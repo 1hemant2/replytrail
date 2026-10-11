@@ -77,6 +77,11 @@ Create a response path   Configure a webhook
              View saved activity history
 ```
 
+For a recurring schedule, the scheduled run is the original occurrence. At
+each daily or weekly calendar time, ReplyTrail creates a new independent run
+with its own ID, steps, email actions, and history. Existing occurrences keep
+running if future repeats are stopped.
+
 ## Feature catalog
 
 | ID | Feature | Primary outcome | Current status |
@@ -271,9 +276,11 @@ the [escalation service](../src/main/java/com/alertops/flow_execution_engine/ser
   The first step's configured acknowledgement wait begins after delivery.
 
 ReplyTrail stores the resolved UTC instant and the submitted timezone. A
-scheduled run can be rescheduled or cancelled only while it remains
-`SCHEDULED`. Those operations race safely with a due start because the database
-decides which transition commits first.
+one-time scheduled run can be rescheduled or cancelled only while it remains
+`SCHEDULED`. Recurring originals and generated runs cannot be rescheduled in
+the current version, but an individual scheduled occurrence can be cancelled.
+Those operations race safely with a due start because the database decides
+which transition commits first.
 
 ### Recurring runs
 
@@ -285,6 +292,31 @@ Stopping recurrence prevents future children while preserving existing runs.
 After downtime, recovery creates only the latest missed occurrence. Monthly,
 yearly, custom-interval, preview, and recurrence-editing features are outside
 the current minimum scope.
+
+### Practical recurring patterns
+
+| Pattern | Example | Recommended schedule |
+| --- | --- | --- |
+| Daily operations | Morning service-health, backup, or opening checks | Every day at the team’s local start time |
+| Shift handover | Ask the outgoing owner to record open issues in the handover document, then notify the supervisor if the response wait expires | Every day at a fixed handover time |
+| Stock review | Ask the storekeeper to check essential supplies and record shortages, with the warehouse lead as the fallback | Every day before ordering or opening |
+| Weekly governance | Access review, security review, or invoice follow-up | Every week at the agreed review time |
+| Payment review | Ask accounts receivable to review unpaid invoices and assign follow-ups in the billing system, with the finance lead as the fallback | Every week before the finance meeting |
+| Report submission | Ask the report owner to publish the status report, then notify the team lead if nobody responds | Every week before the team meeting |
+| Customer follow-up | Remind an account owner to check an unresolved customer action | Every week until future repeats are stopped |
+| Personal routine | A daily nudge for a recurring task | Every day; stop the original when the routine ends |
+
+Use a recurring schedule when the same task needs a new escalation run on a
+calendar rhythm. The task is reused; each occurrence has its own run ID.
+Use multiple response steps when one occurrence needs a finite
+handoff sequence, such as ten reminders that should end after the tenth step.
+
+Daily schedules include weekends; weekly schedules use the original local
+weekday and time. People perform the check or review in the tool linked from
+the task. ReplyTrail does not inspect invoices, stock, or report submissions to
+decide whether to send a recurring request. Acknowledging or resolving an
+occurrence affects that run only. Stop future repeats on the original to end
+the schedule; cancellation of one scheduled run also leaves repeats enabled.
 
 ### Start failure behavior
 
@@ -489,10 +521,12 @@ idempotency behavior from route names alone.
 
 The current product sends SMTP email. SMS, phone calls, push notifications, and
 native Slack or Teams delivery are not implemented. Response paths use named
-team members; rotating on-call calendars are not implemented. **Send test
-escalation** is deferred until initial users provide feedback; its behavior is
-not yet agreed. Production hosting, verified sender/domain setup, and deployed
-end-to-end validation are still open in the [launch checklist](product-launch-readiness.md#release-check).
+team members; rotating on-call calendars are not implemented. Scheduling is
+limited to one-time, daily, and weekly starts; monthly, yearly, custom-
+interval, and cron rules are deferred. **Send test escalation** is deferred
+until initial users provide feedback; its behavior is not yet agreed.
+Production hosting, verified sender/domain setup, and deployed end-to-end
+validation are still open in the [launch checklist](product-launch-readiness.md#release-check).
 
 ## Canonical references
 

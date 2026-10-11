@@ -1,6 +1,6 @@
 # ReplyTrail: critical path to product release
 
-Reassessed: 2026-10-08. This list contains critical bugs to fix first, the two product features selected for this release, and the in-progress review of the Alert Escalation v1 requirements. Scheduling has focused PostgreSQL integration coverage with a simulated broker; the deployed end-to-end release journey remains unverified.
+Reassessed: 2026-10-11. This list contains critical bugs to fix first, the two product features selected for this release, and the in-progress review of the Alert Escalation v1 requirements. Scheduling has focused PostgreSQL integration coverage with a simulated broker; the deployed end-to-end release journey remains unverified.
 
 ## Alert Escalation v1 requirements review
 
@@ -11,7 +11,7 @@ Review these requirements in order. A checked **Requirements agreed** box means 
 - [x] **Requirements agreed**
 - [x] **Implementation complete locally — durable `START_FAILED` notification and Start now**
 - [ ] **Implemented and verified in PostgreSQL/deployed flow**
-- **Requested behaviour:** When creating an escalation, choose **Start immediately** or **Schedule for later**. A scheduled escalation stores a date, time, and timezone, remains `SCHEDULED` until its start time, and then enters the same workflow as an immediate escalation. Before it starts, it can be rescheduled or cancelled. Only one-time schedules are in v1. If all start attempts fail, the responsible users must be notified; that notification must survive an application crash or restart.
+- **Requested behaviour:** When creating an escalation, choose **Start immediately** or **Schedule for later**. A scheduled escalation stores a date, time, and timezone, remains `SCHEDULED` until its start time, and then enters the same workflow as an immediate escalation. A scheduled run may be one-time, daily, or weekly. Before it starts, a one-time run can be rescheduled or cancelled; recurring schedules can stop future repeats from the original run. If all start attempts fail, the responsible users must be notified; that notification must survive an application crash or restart.
 - **Current state:** The core local scheduling implementation is complete. The escalation stores a one-time UTC start instant and IANA timezone, exposes create/reschedule/cancel actions, schedules starts in memory from the durable database row, recovers scheduled rows on startup, and atomically claims a scheduled start before creating response steps. Exhausted retries produce `START_FAILED` and create one durable notification obligation per responsible recipient; startup recovery can deliver obligations that remained pending across a crash. PostgreSQL integration and deployed end-to-end verification remain pending.
 - **Agreed product decisions:**
   - Put the schedule on the escalation run, not on the reusable task or escalation path.
@@ -24,11 +24,11 @@ Review these requirements in order. A checked **Requirements agreed** box means 
   - When the retry limit is exhausted, change the escalation to `START_FAILED` and atomically persist a pending failure-notification obligation in PostgreSQL. Do not rely on the scheduler callback or an in-memory queue to remember that notification.
   - Notify the user who scheduled the escalation and the team owner or administrators. If the application stops after recording `START_FAILED` but before notification delivery, startup recovery must find the pending notification and send it when the application is available again.
   - Record successful delivery so normal recovery does not resend it. Prefer at-least-once delivery over losing the notification; the implementation must tolerate the narrow possibility of a duplicate if the application stops after the provider accepts the notification but before delivery is recorded.
-- **Verification needed:** API validation and team isolation; timezone and daylight-saving conversion; start-at-time behaviour; restart recovery; duplicate trigger safety; reschedule/start and cancel/start races; UI state and actions; proof that recurring or cron schedules are not accepted; exhausted retries persist `START_FAILED` and pending notification together; notification-delivery failure remains recoverable; application restart sends pending notifications; repeated recovery does not create avoidable duplicates; the correct user and team administrators are notified.
+- **Verification needed:** API validation and team isolation; timezone and daylight-saving conversion; one-time and recurring start-at-time behaviour; restart recovery; duplicate trigger safety; reschedule/start and cancel/start races; stop-repeat behavior; independent overlapping occurrences; UI state and actions; rejection of monthly, yearly, custom-interval, and cron schedules; exhausted retries persist `START_FAILED` and pending notification together; notification-delivery failure remains recoverable; application restart sends pending notifications; repeated recovery does not create avoidable duplicates; the correct user and team administrators are notified.
 - **Evidence:** [schedule migration](../src/main/resources/db/migration/V6__add_escalation_scheduling.sql), [failure-notification migration](../src/main/resources/db/migration/V10__add_scheduled_start_failure_notifications.sql), [scheduled-start scheduler](../src/main/java/com/alertops/flow_execution_engine/service/EscalationStartScheduler.java), [failure-notification service](../src/main/java/com/alertops/flow_execution_engine/service/EscalationStartFailureNotificationService.java), [start claims](../src/main/java/com/alertops/flow_execution_engine/repository/EscalationRepository.java), [creation UI](../ui/src/features/escalations/EscalationsPage.tsx), [schedule controls and failure state](../ui/src/features/escalations/EscalationDetailPage.tsx), [notification tests](../src/test/java/com/alertops/flow_execution_engine/service/EscalationStartFailureNotificationServiceTest.java).
 - **Local verification:** Focused scheduling/retry/notification tests, early-start/controller tests, backend packaging, and `npm run build` pass. PostgreSQL/Testcontainers integration coverage is currently skipped in this environment, so the final readiness box stays open.
 
-#### Recurring schedules — planned extension
+#### Recurring schedules — minimum version
 
 - [x] **Minimum scope defined; defaults selected**
 - [x] **Minimum implementation complete locally**
@@ -40,11 +40,11 @@ Review these requirements in order. A checked **Requirements agreed** box means 
   table with repeatType, nextRepeatAt, and repeatSourceId. Generated runs do not
   repeat themselves. Do not add a separate recurring-schedule table or lifecycle.
 - **Plan:** [Recurring escalation implementation plan](recurring-escalation-implementation-plan.md).
-  Start with daily/weekly repeats on scheduled starts, stop-repeat, and only the
-  latest missed repeat after downtime. Fixed timezone/DST defaults are recorded;
-  monthly/yearly repeats, editing, custom intervals, previews, and extra history
-  views are deferred. This planned extension does not change one-time readiness
-  or claim deployed verification.
+  The minimum version supports daily/weekly repeats on scheduled starts,
+  stop-repeat, and only the latest missed repeat after downtime. Fixed
+  timezone/DST defaults are recorded; monthly/yearly repeats, editing, custom
+  intervals, previews, and extra history views are deferred. Recurrence extends
+  the existing scheduling flow without changing one-time run behavior.
 - **Local state:** Daily/weekly recurrence, independent child runs, stop-repeat,
   durable next-repeat recovery, and existing-screen controls are implemented.
   Calendar unit coverage, backend compilation/package, UI build/lint, and diff

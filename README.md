@@ -10,23 +10,45 @@ It helps teams answer three questions: **Who should respond? When should the nex
 
 ## Use cases
 
-Use ReplyTrail when you want someone to follow up on a problem, a request, or a
-reminder. It sends an email and, if nobody responds in time, can email the next
-person or remind the same person again.
+Use ReplyTrail whenever work needs a clear owner and a next action. A run can
+start immediately, start once at a future date, or repeat on the same local
+calendar time every day or week. Each email follows the same ordered path: the
+first owner receives the task and the next owner is notified if the response
+wait expires. Acknowledgement completes the run when resolution timeouts are
+disabled; when enabled, it pauses escalation while the owner finishes the work
+and confirms resolution.
 
-- Website or app problems: Email the person who looks after the service. If they do not respond, notify their team lead.
-- Helping new customers: Ask someone to help a customer finish setting up their account. Notify another team member if no one responds.
-- IT help: Follow up on requests such as a login problem or access to a work tool.
-- Failed jobs: Ask the person responsible to check a failed data import or other background job.
-- Unanswered support requests: Remind the support team about a customer who is still waiting for help.
-- Failed backups: Ask someone to check why a backup failed or could not be restored.
-- Security problems: Notify the person who should review a reported security issue.
-- Payment or invoice problems: Ask the billing team to follow up on a failed payment or an incorrect invoice.
-- Upcoming renewals: Schedule a reminder before a certificate expires or a contract needs renewing.
-- Late deliveries: Ask the purchasing team to follow up when a supplier misses a delivery date.
-- Office repairs: Follow up on a broken printer, an office repair, or another maintenance request.
-- Future follow-ups: Schedule a reminder to check a task at a later date.
-- Personal reminders: Send yourself a reminder about the same task roughly once a day for ten days.
+### Event-driven and one-time follow-up
+
+- Website or app problems: Email the service owner and then the team lead if nobody responds.
+- New customer help: Ask customer success to finish setup, with an onboarding lead as the fallback.
+- IT help: Follow up on login, access, or work-tool requests.
+- Failed jobs or backups: Ask the responsible engineer to investigate a failed import, pipeline, backup, or restore.
+- Unanswered support requests: Keep a customer request visible until someone acknowledges it or the path is exhausted.
+- Security problems: Route a reported security issue to a reviewer and then the security lead.
+- Payment or invoice problems: Give billing a clear owner before a customer account is affected.
+- Upcoming renewals: Schedule a one-time reminder before a certificate, contract, or subscription expires.
+- Late deliveries and office repairs: Give purchasing or facilities a follow-up path when a promised delivery or repair is late.
+- Future decisions: Schedule a one-time reminder to check back on a pending decision next week.
+
+### Recurring follow-up
+
+- Daily operational checks: Create a daily run for a morning health check, backup review, or opening checklist.
+- Daily handovers: Ask the outgoing shift owner to record open issues in the handover document; notify the supervisor if nobody takes responsibility.
+- Daily stock checks: Ask the storekeeper to check essential supplies and record shortages; use the warehouse lead as the fallback.
+- Weekly compliance reviews: Create a weekly run for access reviews, security checks, invoice checks, or reporting deadlines.
+- Weekly payment reviews: Ask accounts receivable to review unpaid invoices in the billing system and assign follow-ups; notify the finance lead if the review is missed.
+- Weekly report submissions: Ask the report owner to publish a weekly status report before the team meeting, with the team lead as the fallback.
+- Recurring customer follow-ups: Remind an account owner every week until the customer confirms the next step.
+- Personal routines: Send yourself a daily reminder for a recurring task and stop future runs when the routine is no longer needed.
+
+Recurring schedules create a new independent escalation ID for each occurrence.
+Runs can overlap safely, and stopping future repeats does not cancel a run that
+has already been created. Acknowledging or resolving one occurrence does not
+stop the schedule; use **Stop future repeats** on the original run. Daily means
+every calendar day, including weekends; weekly repeats on the original local
+weekday and time. Monthly, yearly, custom-interval, and cron schedules
+are not part of the current minimum feature.
 
 Add a task describing what needs attention, choose who should receive the
 emails and how long to wait, then start it now or choose a future start time.
@@ -42,13 +64,36 @@ Create a flow with ten steps and put your own team-member email on every step.
 Set each wait to **1,440 minutes (24 hours)** and leave **resolution timeout**
 disabled. Start it with the task you want to be reminded about.
 
-The first reminder is sent as soon as the run starts. Each later
-reminder becomes due 24 hours after the previous email is sent. If you
-click **Acknowledge** and confirm, the remaining reminders stop.
+The first reminder is sent as soon as the run starts. Each later reminder is a
+response step in the same escalation and becomes due 24 hours after the
+previous email is sent. If you click **Acknowledge** and confirm, the remaining
+steps stop. This is a finite ten-step reminder sequence, not a recurring
+schedule.
 
-If you do not acknowledge, the ten-step sequence continues and then ends;
-it does not repeat automatically. Delivery delays or downtime can change when
-emails arrive, so they may not reach you at the same clock time every day.
+If you do not acknowledge, the ten-step sequence continues and then ends.
+Delivery delays or downtime can change when emails arrive, so they may not
+reach you at the same clock time every day.
+
+### Example: a weekly review
+
+Choose **Schedule for later**, select the next local review time, and choose
+**Every week**. ReplyTrail sends the first email at that time and creates the
+next weekly run from the same task and response path. Every occurrence has its
+own acknowledgement, resolution, activity history, and escalation ID. Use
+**Stop future repeats** on the original run when the review is no longer needed.
+
+For a payment review, put the billing-system link and review instructions in
+the task. Assign the first step to the accounts receivable owner with a
+60-minute acknowledgement wait and the next step to the finance lead. Schedule
+the first run for a future Friday at 10:00 in the team's timezone and choose
+**Every week**. Each Friday, the owner receives the request; if nobody
+acknowledges within 60 minutes of delivery, the finance lead receives it.
+Enable resolution timeouts if acknowledgement should also require a separate
+confirmation that the review is finished.
+
+ReplyTrail asks people to perform and confirm the work. People inspect stock,
+review invoices, and submit reports in their own tools; recurring schedules
+send the request even when there is no new external event.
 
 ## Core concepts
 
@@ -130,7 +175,7 @@ The UI can be deployed as static files separately from the backend. Existing `co
 - Node.js 22 and npm for the UI
 - An SMTP account and verified sender for registration, invitation, and escalation emails
 
-Copy the example configuration, replace the password and JWT placeholders, configure SMTP for the account-verification flow, and keep `.env` out of source control. Generate a JWT key with `openssl rand -base64 32`.
+Copy the example configuration, replace the password and JWT placeholders, configure SMTP for the account-verification flow, and keep `.env` out of source control. The backend automatically imports this local file when started from the repository or an IDE. Generate a JWT key with `openssl rand -base64 32`.
 
 ```bash
 cp .env.example .env
@@ -206,7 +251,7 @@ The terminal startup loads all `.env` values. The current Compose file forwards 
 2. Create or select a team. Invite team members from **Members** if they should receive response steps.
 3. Create a task with a meaningful source and description.
 4. Create a response path with at least one step assigned to a team member.
-5. On **Escalations**, choose the task and path, then select **Start immediately** or **Schedule for later**. Creation starts or schedules the run according to that choice.
+5. On **Escalations**, choose the task and path, then select **Start immediately** or **Schedule for later**. For a future start, leave it one-time or choose **Every day** or **Every week** to create independent recurring runs.
 6. Open the run details to follow saved step progress and activity history. In the email, confirm acknowledgement; if the path requires resolution, resolve before the displayed deadline to stop later notifications.
 
 ## Trigger a task through a webhook
