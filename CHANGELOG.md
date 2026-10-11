@@ -4,6 +4,30 @@ Completed repository changes, newest first. Tracking begins on 2026-10-05;
 earlier work has not been reconstructed. Planning and archive rules are in
 [AGENTS.md](AGENTS.md#task-plans-and-documentation).
 
+## 2026-10-11 — Improve dark-mode visibility on the public home page
+
+- Give the home-page theme toggle a light background, readable dark text,
+  visible border, and matching hover state when dark mode is active.
+- Verify the UI typecheck, production build, lint, and whitespace. No theme
+  behavior or backend code changed.
+
+## 2026-10-11 — Make webhook setup feel production-ready
+
+- Organize the Webhooks page into `01 Create`, `02 Send`, and `03 Monitor`,
+  with a copyable route and a compact sender guide.
+- Collapse the detailed field reference to reduce visual density while keeping
+  the request contract visible. Typecheck, production build, lint, and
+  whitespace checks pass; no live event was sent.
+
+## 2026-10-11 — Explain webhook integration for new users
+
+- Add a standalone [webhook integration guide](docs/webhooks.md) covering
+  setup, payload fields, IDs, safe retries, limits, security, responses, and
+  troubleshooting.
+- Link the guide from the README and feature guide while preserving the
+  existing webhook contract and compatibility header. No application behavior
+  changed and no live webhook was triggered.
+
 ## 2026-10-11 — Rename the local workspace folder
 
 - Rename `/Users/hemant/pers/alert_ops` to `/Users/hemant/pers/replytrail`,

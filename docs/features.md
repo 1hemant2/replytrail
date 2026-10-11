@@ -431,7 +431,8 @@ fields are retained as event context.
 
 ### Status and sources
 
-See the [webhook plan](webhook-escalation-implementation-plan.md),
+See the [webhook integration guide](webhooks.md) for the sender setup and
+troubleshooting walkthrough. The implementation contract is in the [webhook plan](webhook-escalation-implementation-plan.md),
 [webhook configuration controller](../src/main/java/com/alertops/webhook/controller/WebhookConfigurationController.java),
 [event controller](../src/main/java/com/alertops/webhook/controller/WebhookEventController.java),
 and the [README request example](../README.md#trigger-a-task-through-a-webhook).
@@ -531,6 +532,7 @@ validation are still open in the [launch checklist](product-launch-readiness.md#
 ## Canonical references
 
 - [Product launch checklist](product-launch-readiness.md) — agreed behavior, release status, and verification gaps.
+- [Webhook integration guide](webhooks.md) — beginner-friendly setup, payload, retry, security, and troubleshooting instructions.
 - [Webhook escalation plan](webhook-escalation-implementation-plan.md) — webhook contract, task/run creation, and idempotency.
 - [Resolution timeout plan](resolution-timeout-implementation-plan.md) — lifecycle, acknowledgement, resolution, and manual action rules.
 - [Recurring escalation plan](recurring-escalation-implementation-plan.md) — daily/weekly recurrence and restart behavior.

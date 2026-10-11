@@ -256,7 +256,9 @@ The terminal startup loads all `.env` values. The current Compose file forwards 
 
 ## Trigger a task through a webhook
 
-An owner or admin creates a webhook on **Webhooks** and selects its default response path. Copy the generated secret when it appears; later list responses do not include it. Rotate the secret if lost or exposed. Send a JSON object to the webhook URL shown in the UI:
+The complete setup, field reference, retry behavior, response codes, security
+guidance, and troubleshooting steps are in the [webhook integration guide](docs/webhooks.md).
+The short example below is enough to send a first test event.
 
 ```bash
 curl -X POST "http://localhost:8096/api/v1/webhooks/<webhook-id>/events" \
@@ -274,9 +276,11 @@ curl -X POST "http://localhost:8096/api/v1/webhooks/<webhook-id>/events" \
   }'
 ```
 
-`eventId`, `taskName`, `description`, and `source` are required. `priority`, `category`, and `referenceUrl` are optional; other JSON fields remain in the saved event. Add `flowId` to use another response path from the same team; otherwise the default is used. The response includes `taskId`, `escalationId`, `flowId`, and `replayed`. A new event returns HTTP 202. Retrying the same `eventId` and payload returns the existing task and run with HTTP 200; reusing the ID with different data returns HTTP 409.
-
-The event route does not require a login JWT, but it checks `X-AlertOps-Webhook-Secret`. The server stores only the secret hash and shows the raw value only on creation or rotation. The default accepted serialized JSON size is 64 KiB (`ALERTOPS_WEBHOOK_MAX_BODY_BYTES=65536`). The default rate limit is 120 requests per webhook per minute (`ALERTOPS_WEBHOOK_RATE_LIMIT=120`), shared through Redis when available. If Redis is unavailable, the fallback counter is per application instance.
+The event route does not require a login JWT, but it checks
+`X-AlertOps-Webhook-Secret`. The server stores only the secret hash and shows
+the raw value only on creation or rotation. A new event returns HTTP `202`;
+retrying the same `eventId` and payload returns the existing task and run with
+HTTP `200`; reusing the ID with different data returns HTTP `409`.
 
 ## Configuration and operations
 
@@ -324,6 +328,7 @@ The backend command runs tests and packages the application; the UI build checks
 - `.github/workflows/ci.yml`: Maven verification, container build, and Trivy image scan on pull requests and configured branch pushes.
 - [`docs/product-launch-readiness.md`](docs/product-launch-readiness.md): release checklist and remaining end-to-end checks.
 - [`docs/features.md`](docs/features.md): human- and AI-readable feature guide.
+- [`docs/webhooks.md`](docs/webhooks.md): step-by-step webhook integration guide.
 - [`docs/deployment/README.md`](docs/deployment/README.md): first-release hosting and Docker Compose deployment direction.
 - [`docs/deployment/hosting-request.md`](docs/deployment/hosting-request.md): an unsent open-source test-hosting request and application preparation guidance.
 - [`CHANGELOG.md`](CHANGELOG.md): completed repository changes and verification notes.
