@@ -1,8 +1,8 @@
 # ReplyTrail UI
 
-React and TypeScript client for the ReplyTrail Spring Boot API. It runs with Vite locally or as static files deployed separately from the backend. See the [root README](../README.md) for backend setup, SMTP configuration, and a webhook API example. Existing `ALERTOPS_*` settings and API identifiers remain compatible during the rebrand.
+React and TypeScript client for the ReplyTrail Spring Boot API. It runs with Vite in GitHub Codespaces or as static files deployed separately from the backend. See the [root README](../README.md) for backend setup, SMTP configuration, and a webhook API example. Existing `ALERTOPS_*` settings and API identifiers remain compatible during the rebrand.
 
-## Run locally
+## Run in Codespaces
 
 Use Node.js 22 and npm. Start the backend and its dependencies first, then run:
 
@@ -46,4 +46,4 @@ docker run --rm -p 8080:8080 alertops-ui
 The existing `alertops-ui` image tag is retained for deployment compatibility during
 the public rebrand.
 
-The UI container does not start the Java API. Its Nginx configuration exposes `/health` and supports client-side routes. `npm run typecheck` and `npm run lint` are available for local checks.
+The UI container does not start the Java API. Its Nginx configuration exposes `/health` and supports client-side routes. `npm run typecheck` and `npm run lint` run in Codespaces and CI.

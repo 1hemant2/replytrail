@@ -162,71 +162,18 @@ PostgreSQL stores tasks, paths, events, runs, step states, and due times. The ba
 | Ready-work delivery | RabbitMQ; database-backed timers determine when work becomes ready |
 | Short-lived shared state | Redis for workflow intents and webhook rate limiting |
 | Email | Spring Mail with an SMTP provider |
-| Packaging and deployment | Docker Compose for local services and planned VM hosting; GitHub Actions for backend build, verification, and image scanning |
+| Packaging and deployment | Docker Compose for Codespaces testing and planned VM hosting; GitHub Actions for branch verification and image scanning |
 
 The UI can be deployed as static files separately from the backend. Existing `com.alertops` packages, `ALERTOPS_*` settings, container/resource names, and the `X-AlertOps-Webhook-Secret` header are retained compatibility identifiers from the earlier product name. Use these exact identifiers in configuration and integrations.
 
-## Run locally
+## Run in GitHub Codespaces
 
-### Prerequisites
-
-- Docker and Docker Compose v2 for PostgreSQL, RabbitMQ, and Redis
-- Java 17 or later to run the backend from source
-- Node.js 22 and npm for the UI
-- An SMTP account and verified sender for registration, invitation, and escalation emails
-
-Copy the example configuration, replace the password and JWT placeholders, configure SMTP for the account-verification flow, and keep `.env` out of source control. The backend automatically imports this local file when started from the repository or an IDE. Generate a JWT key with `openssl rand -base64 32`.
-
-```bash
-cp .env.example .env
-```
-
-### Option A: backend in Docker
-
-From the repository root:
-
-```bash
-docker compose up --build -d
-```
-
-Compose starts the backend, PostgreSQL, RabbitMQ, and Redis. It does **not** start the UI. Default addresses: API `http://localhost:8096`, RabbitMQ management `http://localhost:15672`, PostgreSQL `localhost:5432`, and Redis `localhost:6379`. Host ports can be changed in `.env`.
-
-### Option B: backend from the terminal
-
-Start only the dependencies, load `.env`, and map its service credentials to the Spring production profile. This profile runs Flyway migrations and validates the schema.
-
-```bash
-docker compose up -d postgres rabbitmq redis
-set -a
-source .env
-set +a
-export SPRING_PROFILES_ACTIVE=prod
-export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:${POSTGRES_HOST_PORT:-5432}/${POSTGRES_DB}"
-export SPRING_DATASOURCE_USERNAME="$POSTGRES_USER"
-export SPRING_DATASOURCE_PASSWORD="$POSTGRES_PASSWORD"
-export SPRING_RABBITMQ_HOST=localhost
-export SPRING_RABBITMQ_PORT="${RABBITMQ_HOST_PORT:-5672}"
-export SPRING_RABBITMQ_USERNAME="$RABBITMQ_USER"
-export SPRING_RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD"
-export SPRING_DATA_REDIS_HOST=localhost
-export SPRING_DATA_REDIS_PORT="${REDIS_HOST_PORT:-6379}"
-export SPRING_DATA_REDIS_PASSWORD="$REDIS_PASSWORD"
-./mvnw spring-boot:run
-```
-
-Use `SERVER_PORT` for a different backend port. If changed, update the Vite proxy in `ui/vite.config.ts`.
-
-### Start the UI
-
-In another terminal:
-
-```bash
-cd ui
-npm ci
-npm run dev
-```
-
-Open `http://localhost:5173`. With `VITE_API_BASE_URL` empty, Vite proxies `/api` and `/actuator` to `http://localhost:8096`. For a separate UI deployment, set `VITE_API_BASE_URL` to the public API origin at build time and allow the UI origin with `ALERTOPS_CORS_ALLOWED_ORIGINS` on the backend. See the [UI README](ui/README.md).
+Short interactive development and load checks run in GitHub Codespaces. Full
+functional verification requires a persistent test host. The local computer
+only needs Git and a browser; Docker, Java, Node.js, Maven, and load testing
+tools are not local prerequisites. Follow the [Codespaces and CI testing
+guide](docs/deployment/codespaces-and-ci.md) for the Codespace workflow and
+persistent-host requirements.
 
 ### Configure email
 
@@ -243,7 +190,9 @@ ALERTOPS_UI_BASE_URL=http://localhost:5173
 
 SMTP authentication and STARTTLS default to enabled. For implicit TLS on port 465, set `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE=true` and `SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false`. The sender must be permitted by your SMTP provider and can differ from the SMTP login. The UI URL is used in verification, invitation, and acknowledgement links.
 
-The terminal startup loads all `.env` values. The current Compose file forwards SMTP values and the sender, but uses the application default UI URL (`http://localhost:5173`). For a different UI origin in Docker, add `ALERTOPS_UI_BASE_URL` to the `app.environment` section of `docker-compose.yml` or pass it through your deployment configuration. Without working SMTP settings, email-dependent flows cannot complete.
+The terminal startup loads all `.env` values. Compose forwards the SMTP values,
+sender, UI base URL, and webhook rate limit to the app. Without working SMTP
+settings, email-dependent flows cannot complete.
 
 ### First use
 
@@ -324,12 +273,14 @@ The backend command runs tests and packages the application; the UI build checks
 - [`src/test/java/com/alertops/`](src/test/java/com/alertops/): backend unit, API, and opt-in integration tests.
 - `src/main/resources/db/migration/`: Flyway database migrations.
 - `ui/`: React 19, TypeScript, and Vite client.
-- `docker-compose.yml`: local backend and dependency stack.
+- `docker-compose.yml`: Codespaces test backend and dependency stack.
 - `.github/workflows/ci.yml`: Maven verification, container build, and Trivy image scan on pull requests and configured branch pushes.
 - [`docs/product-launch-readiness.md`](docs/product-launch-readiness.md): release checklist and remaining end-to-end checks.
 - [`docs/features.md`](docs/features.md): human- and AI-readable feature guide.
 - [`docs/webhooks.md`](docs/webhooks.md): step-by-step webhook integration guide.
 - [`docs/deployment/README.md`](docs/deployment/README.md): first-release hosting and Docker Compose deployment direction.
+- [`docs/deployment/shared-oracle-test-production-plan.md`](docs/deployment/shared-oracle-test-production-plan.md): implementation plan for the logically isolated shared Oracle host.
+- [`docs/deployment/codespaces-and-ci.md`](docs/deployment/codespaces-and-ci.md): Codespaces setup and branch/PR testing without tag deployments.
 - [`docs/deployment/hosting-request.md`](docs/deployment/hosting-request.md): an unsent open-source test-hosting request and application preparation guidance.
 - [`CHANGELOG.md`](CHANGELOG.md): completed repository changes and verification notes.
 

@@ -207,12 +207,16 @@ The scheduling integration tests cover publication after commit, no publication 
 ## Release check
 
 - **Deployment decision (2026-10-11):** Version one uses Docker Compose for the
-  backend, PostgreSQL, RabbitMQ, and Redis, plus UI hosting and HTTPS. Initial
-  testing targets a minimal Oracle A1 VM in Mumbai; production hosting is pending
-  confirmation. Kubernetes is deferred and its learning materials are preserved
-  separately. See the [deployment guide](deployment/README.md).
+  backend, PostgreSQL, RabbitMQ, and Redis, plus UI hosting and HTTPS. GitHub
+  Codespaces is supplemental short-lived testing. A single Oracle A1 host is
+  the planned interim home for both persistent testing and production, with
+  separate Compose projects, data namespaces, credentials, domains, and
+  bounded test resources. This is a shared-host single point of failure, not
+  high availability. See the [deployment guide](deployment/README.md) and the
+  [shared-host implementation plan](deployment/shared-oracle-test-production-plan.md).
 - [ ] Prepare and verify the production VM/Compose setup, private dependency
-  ports, HTTPS, external database backups, and recovery after a host restart.
+  ports, logical test/production isolation, HTTPS, external database backups,
+  and recovery after a host restart.
 - [x] Select and implement the public product identity using the [product rebranding plan](product-rebranding-plan.md). ReplyTrail is implemented locally; domain ownership, sender verification, and deployed rollout remain pending. Retain existing integration and storage identifiers during the initial rebrand.
 - [x] All four critical fixes above are complete locally.
 - [ ] A scheduled escalation that exhausts its start retries notifies the responsible user and team administrators. The pending notification survives an application crash and is recovered after restart.

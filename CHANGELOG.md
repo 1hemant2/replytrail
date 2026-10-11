@@ -4,6 +4,23 @@ Completed repository changes, newest first. Tracking begins on 2026-10-05;
 earlier work has not been reconstructed. Planning and archive rules are in
 [AGENTS.md](AGENTS.md#task-plans-and-documentation).
 
+## 2026-10-11 — Bound the Oracle capacity retry plan
+
+- Make 2 OCPU / 12 GB the first A1 provisioning attempt and 1 OCPU / 6 GB the
+  only planned fallback for the shared test and production host.
+- Add a stop condition after both capacity attempts and document that no VM was
+  created during the recent Mumbai checks. No application code changed.
+
+## 2026-10-11 — Plan a shared Oracle test and production host
+
+- Add a [shared-host deployment plan](docs/deployment/shared-oracle-test-production-plan.md)
+  for separate Compose projects, PostgreSQL databases/roles, RabbitMQ vhosts,
+  Redis namespaces, secrets, volumes, domains, CI/CD promotion, backups, and
+  recovery checks.
+- Align deployment and release-readiness documentation with the interim
+  one-host design and the current Oracle A1 capacity limitation. No cloud
+  resources were provisioned and no application behavior changed.
+
 ## 2026-10-11 — Improve dark-mode visibility on the public home page
 
 - Give the home-page theme toggle a light background, readable dark text,
@@ -19,6 +36,20 @@ earlier work has not been reconstructed. Planning and archive rules are in
   the request contract visible. Typecheck, production build, lint, and
   whitespace checks pass; no live event was sent.
 
+## 2026-10-11 — Add Codespaces and branch-based CI testing
+
+- Add a [Codespaces and CI guide](docs/deployment/codespaces-and-ci.md) covering
+  supplemental Codespaces startup, test secrets, forwarded ports, free-resource
+  limits, the three-escalation/5–10 RPS check, cleanup, and the no-tag branch
+  workflow.
+- Add a branch/PR Compose smoke workflow for UI build/lint and disposable
+  backend dependency startup. It does not publish an image or deploy Oracle.
+- Forward the existing UI base URL and webhook rate-limit settings through
+  Compose. Local Docker, Java, Node.js, and load-tool installation is no longer
+  part of the testing path. Document that weekly schedules and full functional
+  verification require a persistent test host. `git diff --check` passes; live
+  Actions and Codespaces remain unverified here.
+
 ## 2026-10-11 — Explain webhook integration for new users
 
 - Add a standalone [webhook integration guide](docs/webhooks.md) covering
@@ -27,6 +58,25 @@ earlier work has not been reconstructed. Planning and archive rules are in
 - Link the guide from the README and feature guide while preserving the
   existing webhook contract and compatibility header. No application behavior
   changed and no live webhook was triggered.
+
+## 2026-10-11 — Remove unused orchestration references from deployment planning
+
+- Keep the deployment guide and release checklist focused on Docker Compose,
+  Codespaces testing, and the planned Oracle production host.
+- Remove Kubernetes wording from the active deployment documentation without
+  changing application code, configuration, cloud resources, or historical
+  changelog records.
+- Verification: `git diff --check` passes and the scoped deployment documents
+  contain no Kubernetes references.
+
+## 2026-10-11 — Document GitHub Codespaces testing deployment
+
+- Add a repeatable Codespaces plan that runs the existing Compose stack and UI,
+  covers secrets, forwarded ports, three concurrent escalations, 5–10 requests
+  per second, restart recovery, evidence, and cleanup.
+- Align the launch checklist and deployment guide with Codespaces for temporary
+  testing and Oracle A1 as the planned production target. No live Codespace or
+  production deployment was performed.
 
 ## 2026-10-11 — Rename the local workspace folder
 
